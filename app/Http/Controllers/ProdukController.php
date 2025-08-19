@@ -8,17 +8,25 @@ use Illuminate\Support\Facades\DB;
 
 class ProdukController extends Controller
 {
-    public function index(){
+    public function index(Request $request){
         $toko = [
             'nama_toko' => 'Toko Saya',
             'alamat' => 'Sidoarjo',
             'type' => 'Ruko'
         ];
-        $produk = produk::get();
-       //$queryBuilder = DB::table('tb_produk')->get();
+        $query = $request->input('q');
+        if ($query) {
+            $produk = produk::where('nama_produk', 'like', "%$query%")
+                ->orWhere('deskripsi_produk', 'like', "%$query%")
+                ->orWhere('harga', 'like', "%$query%")
+                ->get();
+        } else {
+            $produk = produk::get();
+        }
         return view('pages.produk.show', [
             'data_toko'=>$toko,
             'data_produk'=>$produk,
+            'query'=>$query,
         ]);
     }
 
@@ -32,11 +40,10 @@ class ProdukController extends Controller
             'harga_produk'=>'required',
             'deskripsi_produk'=>'required',
         ],[
-            "nama_produk.min"=>"Nama Produk Minimal 8 Karakter",
-            "nama_produk.max"=>"Nama Produk Maksimal 12 Karakter",
-            "nama_produk.required"=>"Nama Produk Tidak Boleh Kosong",
-            "harga_produk.required"=>"Harga Produk Tidak Boleh Kosong",
-            "deskripsi_produk.required"=>"Deskripsi Produk Tidak Boleh Kosong",
+            'nama_produk.min'=>'Nama Produk Minimal 8 Karakter',
+            'nama_produk.max'=>'Nama Produk Maksimal 12 Karakter',
+            'harga_produk.required'=>'Inputan Harga Produk Harus Diisi',
+            'deskripsi_produk.required'=>'Inputan Deskripsi Produk Harus Diisi',
         ]);
 
         produk::create([
@@ -46,15 +53,43 @@ class ProdukController extends Controller
             'kategori_id'=>'1'
         ]);
 
-
         return redirect('/product')->with('message', 'Berhasil Menambahkan Data');
     }
 
     public function show($id){
-            $data = produk::findOrFail($id);
-           
-            // DB::table('tb_produk')->where('id_produk',$id)->firstOrFail();
+        $data = produk::findOrFail($id);
+        return view('pages.produk.detail', ['produk' => $data]);
+    }
 
-            return view('pages.produk.detail',$data);
+    public function edit($id){
+        $data = produk::findOrFail($id);
+        return view('pages.produk.edit', [
+            'data' => $data,
+        ]);
+    }
+
+    public function update(Request $request, $id){
+        $request->validate([
+            'nama_produk'=>'required|min:8',
+            'harga_produk'=>'required',
+            'deskripsi_produk'=>'required',
+        ],[
+            'nama_produk.min'=>'Nama Produk Minimal 8 Karakter',
+            'harga_produk.required'=>'Inputan Harga Produk Harus Diisi',
+            'deskripsi_produk.required'=>'Inputan Deskripsi Produk Harus Diisi',
+        ]);
+        produk::where('id_produk',$id)->update([
+            'nama_produk'=>$request->nama_produk,
+            'harga'=>$request->harga_produk,
+            'deskripsi_produk'=>$request->deskripsi_produk,
+        ], $id);
+
+        return redirect('/product')->with('message', 'Berhasil Mengupdate Data');
+    }
+
+    public function destroy($id){
+        $produk = produk::findOrFail($id);
+        $produk->delete();
+        return redirect('/product')->with('message', 'Data berhasil dihapus!');
     }
 }
