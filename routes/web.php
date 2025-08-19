@@ -8,20 +8,18 @@ Route::get('/', function () {
 });
 
 Route::get('/about', function () {
-    return view('pages.about',[
-        "nama" => "John Doe",
-        "umur" => "18",
+    return view('pages.about', [
+        'nama' => 'John Doe',
+        'umur' => 18,
+        'alamat' => 'Indonesia',
     ]);
 });
 
-Route::get('/about/{id}/detail', function ($id) {
-    return view('pages.detail', [
-        "nomor" => $id,
-    ]);
-});
 
-Route::view('contact','pages.contact');
+Route::view('/contact', 'pages.contact');
 
-// satu controller banyak method
-Route::get('/product',[ProdukController::class, 'getProduk']);
-Route::get('/product/tambah',[ProdukController::class, 'tambahProduk']);
+// Route untuk Produk
+Route::get('/product', [ProdukController::class, 'index']);
+Route::get('/product/create', [ProdukController::class, 'create']); 
+Route::post('/product', [ProdukController::class, 'store']);
+Route::get('/produk/{id}', [ProdukController::class, 'show']);
